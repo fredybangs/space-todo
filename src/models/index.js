@@ -2,12 +2,13 @@ const { Sequelize } = require('sequelize');
 const config = require('../config/database');
 
 const sequelize = new Sequelize(
-  config.database,
-  config.username,
-  config.password,
+  // config.database,
+  // config.username,
+  config.url,
   {
-    host: config.host,
-    dialect: 'postgres',
+    // host: config.host,
+    dialect: config.dialect,
+    dialectOptions: { ssl: { require: true, rejectUnauthorized: false } },
     logging: false
   }
 );
