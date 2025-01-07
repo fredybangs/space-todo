@@ -1,0 +1,371 @@
+openapi: 3.0.0
+info:
+  title: Space Todo API
+  version: 1.0.0
+  description: API documentation for Space Todo application
+servers:
+  - url: https://space-todo.onrender.com/v1/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Todo:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Finish the report
+        description:
+          type: string
+          example: Complete the annual report
+        status:
+          type: string
+          example: completed
+        priority:
+          type: string
+          example: high
+        userId:
+          type: integer
+          example: 1
+        createdAt:
+          type: string
+          format: date-time
+          example: '2025-07-01T10:00:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2025-07-01T10:30:00.000Z'
+security:
+  - bearerAuth: []
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: User's name
+                email:
+                  type: string
+                  description: User's email
+                password:
+                  type: string
+                  description: User's password
+      responses:
+        '201':
+          description: User created successfully
+        '400':
+          description: Bad Request
+  /auth/login:
+    post:
+      summary: Log in a user
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: User's email
+                password:
+                  type: string
+                  description: User's password
+      responses:
+        '200':
+          description: User logged in successfully
+        '401':
+          description: Unauthorized
+  /auth/change-password:
+    post:
+      summary: Change the current user's password
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                  description: User's current password
+                newPassword:
+                  type: string
+                  description: User's new password
+      responses:
+        '200':
+          description: Password changed successfully
+        '403':
+          description: Invalid current password
+  /auth/request-password-reset:
+    post:
+      summary: Request an OTP to reset the password
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: User's email
+      responses:
+        '200':
+          description: OTP sent to email
+        '404':
+          description: User not found
+  /auth/verify-otp:
+    post:
+      summary: Verify the OTP for password reset
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: User's email
+                otp:
+                  type: string
+                  description: OTP received by the user
+      responses:
+        '200':
+          description: OTP verified
+        '403':
+          description: Invalid OTP
+  /auth/reset-password:
+    post:
+      summary: Reset the password using OTP
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: User's email
+                otp:
+                  type: string
+                  description: OTP received by the user
+                newPassword:
+                  type: string
+                  description: New password chosen by the user
+      responses:
+        '200':
+          description: Password reset successfully
+        '403':
+          description: Invalid OTP
+  /todos:
+    post:
+      summary: Create a new todo
+      tags:
+        - Todos
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: The title of the todo
+                description:
+                  type: string
+                  description: The description of the todo
+                priority:
+                  type: string
+                  description: The priority of the todo
+                dueDate:
+                  type: string
+                  description: When the todo is due
+                reminderTime:
+                  type: string
+                  description: When to remind the user
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: Tags for the todo
+                status:
+                  type: string
+                  description: The status of the todo (e.g., pending, completed)
+      responses:
+        '201':
+          description: Todo created successfully
+        '400':
+          description: Bad request
+    get:
+      summary: Get all todos
+      tags:
+        - Todos
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+          description: Filter todos by status
+        - in: query
+          name: priority
+          schema:
+            type: string
+          description: Filter todos by priority
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search todos by title or description
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+          description: Number of todos per page
+      responses:
+        '200':
+          description: List of todos with pagination metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  intent:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Todo'
+                  meta:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        example: 20
+                      page:
+                        type: integer
+                        example: 1
+                      limit:
+                        type: integer
+                        example: 10
+        '500':
+          description: Server error
+  /todos/{id}:
+    get:
+      summary: Get a single todo by ID
+      tags:
+        - Todos
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the todo
+      responses:
+        '200':
+          description: A single todo item
+        '404':
+          description: Todo not found
+    put:
+      summary: Update a todo by ID
+      tags:
+        - Todos
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the todo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                priority:
+                  type: string
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Todo updated successfully
+        '400':
+          description: Bad request
+        '404':
+          description: Todo not found
+    delete:
+      summary: Delete a todo by ID
+      tags:
+        - Todos
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the todo
+      responses:
+        '200':
+          description: Todo deleted successfully
+        '404':
+          description: Todo not found
+tags:
+  - name: Auth
+    description: Authentication and user management
+  - name: Todos
+    description: Managing todos
