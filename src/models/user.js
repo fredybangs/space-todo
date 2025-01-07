@@ -21,9 +21,21 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false
     },
+    resetOtp: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    otpExpiresAt: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE
   });
+
+  User.associate = function(models) {
+    User.hasMany(models.Todo, { foreignKey: 'userId' });
+  };
 
   return User;
 };

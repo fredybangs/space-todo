@@ -1,22 +1,26 @@
+const { Op } = require('sequelize');
 const { Todo } = require('../models');
+
+const handleErrors = (res, error, statusCode = 500) => {
+  return res.status(statusCode).json({ intent: false, message: error.message });
+};
 
 const createTodo = async (req, res) => {
   try {
     const todo = await Todo.create({
       ...req.body,
-      UserId: req.user.id
+      userId: req.user.id
     });
-    res.status(201).json(todo);
+    res.status(201).json({ intent: true, data: todo });
   } catch (error) {
-    res.status(400).json({intent: false, message: error.message });
+    handleErrors(res, error, 400);
   }
 };
 
 const getTodos = async (req, res) => {
   try {
-    const { status, priority, search } = req.query;
-    const where = { UserId: req.user.id };
-    
+    const { status, priority, search, page = 1, limit = 10 } = req.query;
+    const where = { userId: req.user.id, archived: false };
     if (status) where.status = status;
     if (priority) where.priority = priority;
     if (search) {
@@ -26,14 +30,17 @@ const getTodos = async (req, res) => {
       ];
     }
 
-    const todos = await Todo.findAll({
+    const offset = (page - 1) * limit;
+    const { count, rows: todos } = await Todo.findAndCountAll({
       where,
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
     });
-    
-    res.json({intent: true, data: todos});
+
+    res.json({ intent: true, data: todos, meta: { total: count, page: parseInt(page), limit: parseInt(limit) } });
   } catch (error) {
-    res.status(500).json({intent: false, message: error.message });
+    handleErrors(res, error);
   }
 };
 
@@ -42,17 +49,18 @@ const getTodoById = async (req, res) => {
     const todo = await Todo.findOne({
       where: {
         id: req.params.id,
-        UserId: req.user.id
+        userId: req.user.id,
+        archived: false
       }
     });
-    
+
     if (!todo) {
-      return res.status(404).json({intent: false, message: 'Todo not found' });
+      return res.status(404).json({ intent: false, message: 'Task not found' });
     }
-    
-    res.json({intent: true, data: todo});
+
+    res.json({ intent: true, data: todo });
   } catch (error) {
-    res.status(500).json({intent: false, message: error.message });
+    handleErrors(res, error);
   }
 };
 
@@ -61,37 +69,42 @@ const updateTodo = async (req, res) => {
     const [updated] = await Todo.update(req.body, {
       where: {
         id: req.params.id,
-        UserId: req.user.id
+        userId: req.user.id,
+        archived: false
       }
     });
-    
+
     if (!updated) {
-      return res.status(404).json({intent: false, message: 'Todo not found' });
+      return res.status(404).json({ intent: false, message: 'Task not found' });
     }
-    
+
     const todo = await Todo.findByPk(req.params.id);
-    res.json({intent: true, data:todo});
+    res.json({ intent: true, data: todo });
   } catch (error) {
-    res.status(400).json({ intent: false,message: error.message });
+    handleErrors(res, error, 400);
   }
 };
 
 const deleteTodo = async (req, res) => {
   try {
-    const deleted = await Todo.destroy({
-      where: {
-        id: req.params.id,
-        UserId: req.user.id
+    const [updated] = await Todo.update(
+      { archived: true },
+      {
+        where: {
+          id: req.params.id,
+          userId: req.user.id,
+          archived: false
+        }
       }
-    });
-    
-    if (!deleted) {
-      return res.status(404).json({intent: false, message: 'Todo not found' });
+    );
+
+    if (!updated) {
+      return res.status(404).json({ intent: false, message: 'Task not found' });
     }
-    
-    res.json({intent: true, message: 'Todo deleted successfully' });
+
+    res.json({ intent: true, message: 'Task deleted successfully' });
   } catch (error) {
-    res.status(500).json({intent: false, message: error.message });
+    handleErrors(res, error);
   }
 };
 
