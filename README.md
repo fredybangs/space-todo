@@ -117,7 +117,7 @@ The server will start on `http://localhost:3000`.
 
 To explore the API documentation, visit the Swagger UI at:
 
-[http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+[https://app.swaggerhub.com/apis-docs/thespaceman/space-todo_api/1.0.0](https://app.swaggerhub.com/apis-docs/thespaceman/space-todo_api/1.0.0)
 
 ---
 
