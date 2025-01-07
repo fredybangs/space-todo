@@ -56,7 +56,7 @@ const changePassword = async (req, res) => {
     const user = await User.findByPk(req.user.id);
 
     if (!user || !(await bcrypt.compare(oldPassword, user.password))) {
-      return res.status(403).json({ message: 'Invalid current password' });
+      return res.status(403).json({intent: false, message: 'Invalid current password' });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -65,7 +65,7 @@ const changePassword = async (req, res) => {
 
     res.json({ intent: true, message: 'Password changed successfully' });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({intent: false, message: error.message });
   }
 };
 
@@ -75,7 +75,7 @@ const requestPasswordReset = async (req, res) => {
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({intent: false, message: 'User not found' });
     }
 
     const otp = generateOtp();
@@ -87,7 +87,7 @@ const requestPasswordReset = async (req, res) => {
     await sendOtpEmail(email, otp);
     res.json({ intent: true, message: 'OTP sent to email' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({intent: false, message: error.message });
   }
 };
 
@@ -97,16 +97,16 @@ const verifyOtp = async (req, res) => {
     const user = await User.findOne({ where: { email, resetOtp: otp } });
 
     if (!user) {
-      return res.status(403).json({ message: 'Invalid OTP' });
+      return res.status(403).json({intent: false, message: 'Invalid OTP' });
     }
 
     if (new Date() > user.otpExpiresAt) {
-      return res.status(403).json({ message: 'OTP has expired' });
+      return res.status(403).json({intent: false, message: 'OTP has expired' });
     }
 
     res.json({ intent: true, message: 'OTP verified' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({intent: false, message: error.message });
   }
 };
 
@@ -116,7 +116,7 @@ const resetPassword = async (req, res) => {
     const user = await User.findOne({ where: { email, resetOtp: otp } });
 
     if (!user) {
-      return res.status(403).json({ message: 'Invalid OTP' });
+      return res.status(403).json({intent: false, message: 'Invalid OTP' });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -127,7 +127,7 @@ const resetPassword = async (req, res) => {
 
     res.json({ intent: true, message: 'Password reset successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({intent: false, message: error.message });
   }
 };
 
