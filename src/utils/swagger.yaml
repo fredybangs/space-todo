@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: API documentation for Space Todo application
 servers:
-  - url: https://space-todo.onrender.com/v1/api
+  - url: http://space-todo.onrender.com/v1/api
 components:
   securitySchemes:
     bearerAuth:
