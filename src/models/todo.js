@@ -34,6 +34,7 @@ module.exports = (sequelize, DataTypes) => {
     completedAt: {
       type: DataTypes.DATE
     },
+    archived: { type: DataTypes.BOOLEAN, defaultValue: false },
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,

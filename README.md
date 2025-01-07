@@ -65,7 +65,7 @@ Ensure you have the following installed before setting up the project:
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/your-username/space-todo-api.git
+   git clone https://github.com/fredybangs/space-todo.git
    ```
 
 2. **Navigate to the project directory**:
@@ -85,6 +85,7 @@ Ensure you have the following installed before setting up the project:
    - Add the following environment variables with your own values:
    
    ```env
+   DB_URL=your_database_url
    JWT_SECRET=your_jwt_secret
    NODEMAILER_PASSWORD=your_nodemailer_password
    SPEAKEASY_SECRET=your_speakeasy_secret
@@ -149,6 +150,7 @@ To explore the API documentation, visit the Swagger UI at:
 
 | Variable            | Description                          |
 |---------------------|--------------------------------------|
+| `DB_URL`        | Database URL                   |
 | `JWT_SECRET`        | Secret key for JWT                   |
 | `NODEMAILER_PASSWORD` | Password for the email service       |
 | `SPEAKEASY_SECRET`  | Secret key for Speakeasy OTP         |

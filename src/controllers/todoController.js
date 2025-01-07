@@ -20,8 +20,7 @@ const createTodo = async (req, res) => {
 const getTodos = async (req, res) => {
   try {
     const { status, priority, search, page = 1, limit = 10 } = req.query;
-    const where = { userId: req.user.id };
-
+    const where = { userId: req.user.id, archived: false };
     if (status) where.status = status;
     if (priority) where.priority = priority;
     if (search) {
@@ -36,9 +35,9 @@ const getTodos = async (req, res) => {
       where,
       order: [['createdAt', 'DESC']],
       limit: parseInt(limit),
-      offset
+      offset: parseInt(offset)
     });
-    
+
     res.json({ intent: true, data: todos, meta: { total: count, page: parseInt(page), limit: parseInt(limit) } });
   } catch (error) {
     handleErrors(res, error);
@@ -50,12 +49,13 @@ const getTodoById = async (req, res) => {
     const todo = await Todo.findOne({
       where: {
         id: req.params.id,
-        userId: req.user.id
+        userId: req.user.id,
+        archived: false
       }
     });
 
     if (!todo) {
-      return res.status(404).json({ intent: false, message: 'Todo not found' });
+      return res.status(404).json({ intent: false, message: 'Task not found' });
     }
 
     res.json({ intent: true, data: todo });
@@ -69,12 +69,13 @@ const updateTodo = async (req, res) => {
     const [updated] = await Todo.update(req.body, {
       where: {
         id: req.params.id,
-        userId: req.user.id
+        userId: req.user.id,
+        archived: false
       }
     });
 
     if (!updated) {
-      return res.status(404).json({ intent: false, message: 'Todo not found' });
+      return res.status(404).json({ intent: false, message: 'Task not found' });
     }
 
     const todo = await Todo.findByPk(req.params.id);
@@ -86,18 +87,22 @@ const updateTodo = async (req, res) => {
 
 const deleteTodo = async (req, res) => {
   try {
-    const deleted = await Todo.destroy({
-      where: {
-        id: req.params.id,
-        userId: req.user.id
+    const [updated] = await Todo.update(
+      { archived: true },
+      {
+        where: {
+          id: req.params.id,
+          userId: req.user.id,
+          archived: false
+        }
       }
-    });
+    );
 
-    if (!deleted) {
-      return res.status(404).json({ intent: false, message: 'Todo not found' });
+    if (!updated) {
+      return res.status(404).json({ intent: false, message: 'Task not found' });
     }
 
-    res.json({ intent: true, message: 'Todo deleted successfully' });
+    res.json({ intent: true, message: 'Task deleted successfully' });
   } catch (error) {
     handleErrors(res, error);
   }
